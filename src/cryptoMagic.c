@@ -65,8 +65,6 @@ int main(int argc, char *argv[]) {
     fclose(file);
     fclose(file_out);
 
-    printf(read_fp);
-
     if (!keep) remove(read_fp);
     
     free(out_name);
@@ -80,7 +78,6 @@ int check_param(int argc, char* argv[]) {
     if (argc == 1) return -1;
 
     for (int i = 1; i < argc; ++i) {
-
         char *saveptr1;
         char *saveptr2;
 
@@ -102,8 +99,10 @@ int check_param(int argc, char* argv[]) {
             return 0;
         }
 
+
         if (file == NULL) {
             file = fopen(argv[i], "r");
+            
             if (file != NULL) {
                 read_fp = argv[i];
                 char *temp_arg = malloc(strlen(argv[i]));
@@ -128,7 +127,8 @@ int check_param(int argc, char* argv[]) {
                         if (file_segment != NULL) break;
 
                         if (strcmp(sub_segment, curr_segment) == 0) {
-                            file_name = sub_segment;
+                            strcpy(file_name, sub_segment);
+                            strcat(file_name, ".");
                             break;                        
                         } else {
                             if (strcmp(sub_segment, "txt") != 0 && strcmp(sub_segment, "crp") != 0) {
@@ -154,14 +154,15 @@ int check_param(int argc, char* argv[]) {
             }   
         }
     }
+
     if (!encr && !decr) {
         encr = 1;
     }
 
     out_name = (char *) malloc(strlen(file_name) + strlen(extension) + 1);
     strcpy(out_name, file_name);
-    if (strcmp(extension, "txt") == 0) strcat(out_name, "crp");
-    else strcat(out_name, "txt");
+    if (encr) strcat(out_name, "crp");
+    else if (decr) strcat(out_name, "txt");
 
     char *fpath = (char *) malloc(strlen((strcat(_pgmptr, "\\output\\"), out_name)));
     fpath = strremove(_pgmptr, "cryptoMagic.exe\\");
@@ -184,7 +185,7 @@ int check_param(int argc, char* argv[]) {
                 file_out = fopen(strcat(fpath, out_name), "w");
             }
         } else {
-            printf("Provided alternate output path is either not formatted correctly or not input correctly (alternate filepath must follow the delaration of '-O')\nContinuing with default filepath");
+            printf("Provided alternate output path is either not formatted correctly or not input correctly (alternate filepath must follow the delaration of '-O')\nContinuing with default filepath\n");
             file_out = fopen(strcat(fpath, out_name), "w");
         }
         free(copy_path);
@@ -205,10 +206,10 @@ int encrypt() {
         for (int i = 0; i < strlen(curr_line); ++i) {
             
             if (curr_line[i] == '\t') {
-                if (fputs("TT", file_out) == EOF) printf("Error putting to file"), result = 0;
+                if (fputs("TT", file_out) == EOF) printf("Error putting to file\n"), result = 0;
                 continue;
             } else if (curr_line[i] == '\n' || curr_line[i] == '\r') {
-                if (fputc(curr_line[i], file_out) == EOF) printf("Error putting to file"), result = 0;
+                if (fputc(curr_line[i], file_out) == EOF) printf("Error putting to file\n"), result = 0;
                 continue;
             } else if (curr_line[i] != '\n' && curr_line[i] != '\r') {
                 char *encrypted = (char *) malloc(2);
@@ -216,7 +217,7 @@ int encrypt() {
                 if (let_ascii < 32) let_ascii = (let_ascii - 32) + 144;
 
                 sprintf(encrypted, "%2X", let_ascii);
-                if (fputs(encrypted, file_out) == EOF) printf("Error putting to file"), result = 0; 
+                if (fputs(encrypted, file_out) == EOF) printf("Error putting to file\n"), result = 0; 
                 free(encrypted);
             }
         }
@@ -242,9 +243,9 @@ int decrypt() {
             sub_str[1] = curr_line[i+1];
 
             if (strcmp(sub_str, "TT") == 0) {
-                if (fputc('\t', file_out) == EOF) printf("Error putting to file"), result = 0;
+                if (fputc('\t', file_out) == EOF) printf("Error putting to file\n"), result = 0;
             } else if (curr_line[i] == '\n' || curr_line[i] == '\r') {
-                if (fputc(curr_line[i], file_out) == EOF) printf("Error putting to file"), result = 0;
+                if (fputc(curr_line[i], file_out) == EOF) printf("Error putting to file\n"), result = 0;
                 output_array[i/2] = curr_line[i];
             } else if (curr_line[i] != '\n' && curr_line[i] != '\r' && curr_line[i + 1] != '\n' && curr_line[i + 1] != '\r') {
 
@@ -260,19 +261,6 @@ int decrypt() {
     }
 
     return result;
-}
-
-int indexOf(const char * str, const char toFind) {
-    int i = 0;
-
-    while(str[i] != '\0')
-    {
-        if(str[i] == toFind)
-            return i;
-        i++;
-    }
-    // Return -1 as character not found
-    return INT_MAX;
 }
 
 char *strremove(char *str, const char *sub) {
