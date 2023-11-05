@@ -5,11 +5,11 @@
       "name": "C/C++ Runner: Debug Session",
       "type": "cppdbg",
       "request": "launch",
-      "args": [],
+      "args": ["-E","test.txt"],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Users/Ducvko/Documents/GitHub/Encrypt-and-Decrypt-ASCII",
-      "program": "c:/Users/Ducvko/Documents/GitHub/Encrypt-and-Decrypt-ASCII/build/Debug/outDebug",
+      "cwd": "c:/Users/Ducvko/Documents/GitHub/Mini-Project-1",
+      "program": "c:/Users/Ducvko/Documents/GitHub/Mini-Project-1/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
@@ -19,6 +19,6 @@
           "ignoreFailures": true
         }
       ]
-    }
+    } 
   ]
 }
