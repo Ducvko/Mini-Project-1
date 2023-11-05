@@ -9,7 +9,7 @@
       "stopAtEntry": false,
       "externalConsole": true,
       "cwd": "c:/Users/Ducvko/Documents/GitHub/Mini-Project-1",
-      "program": "c:/Users/Ducvko/Documents/GitHub/Mini-Project-1/build/Debug/outDebug",
+      "program": "c:/Users/Ducvko/Documents/GitHub/Mini-Project-1/cryptoMagic.exe",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

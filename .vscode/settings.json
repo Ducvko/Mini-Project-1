@@ -60,7 +60,10 @@
     "cryptomagic.h": "c",
     "string.h": "c",
     "stdio.h": "c",
-    "stdlib.h": "c"
+    "stdlib.h": "c",
+    "shlwapi.h": "c",
+    "dirent.h": "c",
+    "windows.h": "c"
   },
   "C_Cpp.errorSquiggles": "enabled"
 }

@@ -2,7 +2,9 @@
 #include <windows.h>
 #include <dirent.h>
 #include <errno.h>
-#include <shlwapi.h>
+
+// #include <shlwapi.h>
+// #pragma comment(link, "shlwapi.lib")
 
 /*
  *  Required Parameters:
@@ -17,7 +19,7 @@
  * 
  *      -KEEP_ORIG: Keeps the original file after finishing the operation
  * 
- *      -O proceeding file path is the output filepath 
+ *      -O proceeding file path is the output ABSOLUTE filepath 
 */
 
 
@@ -32,10 +34,10 @@ char *abs_path;
 
 FILE *file;
 char *file_name;
-char *extension;
+char extension[3];
+char *out_name;
 
 FILE *file_out;
-
 
 
 int main(int argc, char *argv[]) {
@@ -43,30 +45,37 @@ int main(int argc, char *argv[]) {
     if (!check_param(argc, argv)) exit (-1);
 
     if (encr) {
-        file_out = fopen(strcat("output\\", file_name), "w");
         if (encrypt()) {
-            if (!alt_out) printf("Encryption Successful!\nOutput file at: %s\\output\\%s", _pgmptr, strcat(file_name, "crp"));
-            else printf("Encryption Successful!\nOutput file at: %s\\%s", alt_path, strcat(file_name, "crp"));
+            printf("Encryption Successful!\nOutput file at: ");
+            if (!alt_out) printf("%s\\output\\%s", _pgmptr, out_name);
+            else printf("%s\\%s", abs_path, out_name);
         } else {
             exit(-1);
         }
     } else if (decr) {
         if (decrypt()) {
-            printf("Decryption Successful!\nOutput file at: %s", );
+            printf("Decryption Successful!\nOutput file at:");
+            if (!alt_out) printf("%s\\output\\%s", _pgmptr, out_name);
+            else printf("%s\\%s", abs_path, out_name);
         } else {
             exit(-1);
         }
     }
 
+    free(out_name);
+    free(file_name);
+
     return 0;
 }
 
 int check_param(int argc, char* argv[]) {
+
+    if (argc == 1) return -1;
+
     for (int i = 1; i < argc; ++i) {
 
         char *saveptr1;
         char *saveptr2;
-        char *saveptr3;
 
         if (strcmp(argv[i], "-E") == 0) encr = 1;
         else if (strcmp(argv[i], "-D") == 0) decr = 1;
@@ -78,11 +87,6 @@ int check_param(int argc, char* argv[]) {
         if (alt_out) {
             if (strcmp(argv[i-1], "-O")) {
                 alt_path = argv[i];
-                if (PathIsRelative(alt_path)) {
-                    _fullpath(abs_path, alt_path, _MAX_PATH);
-                } else {
-                    abs_path = alt_path;
-                }
             }
         }
 
@@ -93,10 +97,7 @@ int check_param(int argc, char* argv[]) {
 
         if (file == NULL) {
             file = fopen(argv[i], "r");
-            printf("file opened\n");
             if (file != NULL) {
-                printf("file valid\n");
-                printf("file_name: %s\n", argv[i]);
 
                 char *file_segment = strtok_r(argv[i], "\\", &saveptr1);
                 file_name = malloc(strlen(file_segment)+1);
@@ -130,15 +131,16 @@ int check_param(int argc, char* argv[]) {
                                 }
                                 strcat(file_name, ".");
                             } else {
-                                extension = sub_segment;
+                                char *temp_extension = sub_segment;
+                                strcpy(extension, temp_extension);
                                 break;
                             }
                         }
                         sub_segment = strtok_r(NULL, ".", &saveptr2);
                     }
+                    free(temp_segment);
+                    free(curr_segment);
                 }
-
-                printf("%s", file_name);
             }   
         }
     }
@@ -146,16 +148,35 @@ int check_param(int argc, char* argv[]) {
         encr = 1;
     }
 
+    out_name = (char *) malloc(strlen(file_name) + strlen(extension) + 1);
+    strcpy(out_name, file_name);
+    if (strcmp(extension, "txt") == 0) strcat(out_name, "crp");
+    else strcat(out_name, "txt");
+
     if (alt_out) {
         DIR *test_dir = opendir(abs_path);
+        char * copy_path = (char *) malloc(strlen(abs_path) + 1);
+        strcpy(copy_path, abs_path);
         if (test_dir) {
             printf("Alternate output directory exists! now selected as output path.\n");
+            file_out = fopen(abs_path, "w");
         } else if (ENOENT == errno) {
             printf("Valid directory was provided however did not exist, attempting to create...");
-            if (!mkdir(abs_path)) printf("\nSuccessfully created directory at %s\n", abs_path);
+            if (!mkdir(abs_path)) {
+                printf("\nSuccessfully created directory at %s\n", abs_path);
+                file_out = fopen(strcat(copy_path, out_name), "w");
+            } else {
+                printf("\nFailed to create directory at %s\nContinuing with default filepath %s\\output\\\n", abs_path, _pgmptr);
+                alt_out = 0;
+                file_out = fopen(strcat(strcat(_pgmptr, "\\output\\"), out_name), "w");
+            }
         } else {
             printf("Provided alternate output path is either not formatted correctly or not input correctly (alternate filepath must follow the delaration of '-O')\nContinuing with default filepath");
         }
+        free(copy_path);
+    } else {
+        printf("%s", strcat(strcat(_pgmptr, "\\output\\"), out_name));
+        file_out = fopen(strcat(strcat(_pgmptr, "\\output\\"), out_name), "w");
     }
 
     return 1;
@@ -164,6 +185,38 @@ int check_param(int argc, char* argv[]) {
 int encrypt() {
     int result = 0;
 
+    char output_array[255];
+
+    char curr_line[120];
+
+
+    while (fgets(curr_line, sizeof(curr_line), file) != NULL) {
+        int first_put = 1;
+        int EOL = min(min(indexOf(curr_line, (char) '\r'), indexOf(curr_line, (char) '\n')), strlen(curr_line));
+        for (int i = 0; i <= EOL; ++i) {
+            char encrypted[2];
+            if (curr_line[i] == '\t') {
+                encrypted[0] = 'T';
+                encrypted[1] = 'T';
+            } else if (curr_line[i] != '\n') {
+                int let_ascii = ((int) curr_line[i]) - 16;
+                if (let_ascii < 32) let_ascii = (let_ascii - 32) + 144;
+
+                sprintf(encrypted, "%2X", let_ascii);
+            }
+
+            if (first_put){ 
+                strcpy(output_array, encrypted);
+                first_put = 0;
+            } else {
+                strcat(output_array, encrypted);
+            } 
+        }
+
+        fputs(output_array, file_out);
+        
+    }
+
 
 
     return result;
@@ -171,6 +224,22 @@ int encrypt() {
 
 int decrypt() {
     int result = 0;
+    // output_array = (char *) malloc(121);
 
+
+    // free(output_array);
     return result;
+}
+
+int indexOf(const char * str, const char toFind) {
+    int i = 0;
+
+    while(str[i] != '\0')
+    {
+        if(str[i] == toFind)
+            return i;
+        i++;
+    }
+    // Return -1 as character not found
+    return INT_MAX;
 }
