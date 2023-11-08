@@ -5,11 +5,11 @@
       "name": "C/C++ Runner: Debug Session",
       "type": "cppdbg",
       "request": "launch",
-      "args": ["-E","test.txt"],
+      "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Users/Ducvko/Documents/GitHub/Mini-Project-1",
-      "program": "c:/Users/Ducvko/Documents/GitHub/Mini-Project-1/cryptoMagic.exe",
+      "cwd": "c:/Users/Ducvko/Documents/GitHub/Mini-Project-1/src",
+      "program": "c:/Users/Ducvko/Documents/GitHub/Mini-Project-1/src/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
@@ -19,6 +19,6 @@
           "ignoreFailures": true
         }
       ]
-    } 
+    }
   ]
 }

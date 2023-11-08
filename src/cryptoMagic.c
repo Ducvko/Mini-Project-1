@@ -99,59 +99,60 @@ int check_param(int argc, char* argv[]) {
             return 0;
         }
 
+        if (strcmp(argv[i-1], "-O") != 0) {
+            if (file == NULL) {
+                file = fopen(argv[i], "r");
+                
+                if (file != NULL) {
+                    read_fp = argv[i];
+                    char *temp_arg = malloc(strlen(argv[i]));
+                    strcpy(temp_arg, argv[i]);
+                    char *file_segment = strtok_r(temp_arg, "\\", &saveptr1);
+                    file_name = malloc(strlen(file_segment)+1);
 
-        if (file == NULL) {
-            file = fopen(argv[i], "r");
-            
-            if (file != NULL) {
-                read_fp = argv[i];
-                char *temp_arg = malloc(strlen(argv[i]));
-                strcpy(temp_arg, argv[i]);
-                char *file_segment = strtok_r(temp_arg, "\\", &saveptr1);
-                file_name = malloc(strlen(file_segment)+1);
+                    int first_segment = 0;
+                    while (file_segment != NULL) {
+                        char *temp_segment = (char *) malloc(strlen(file_segment) + 1);
+                        strcpy(temp_segment, file_segment);
 
-                int first_segment = 0;
-                while (file_segment != NULL) {
-                    char *temp_segment = (char *) malloc(strlen(file_segment) + 1);
-                    strcpy(temp_segment, file_segment);
+                        char *curr_segment = (char *) malloc(strlen(file_segment) + 1);
+                        strcpy(curr_segment, file_segment);
 
-                    char *curr_segment = (char *) malloc(strlen(file_segment) + 1);
-                    strcpy(curr_segment, file_segment);
+                        file_segment = strtok_r(NULL, "\\", &saveptr1); // Looks at the future segment
 
-                    file_segment = strtok_r(NULL, "\\", &saveptr1); // Looks at the future segment
+                        char *sub_segment = strtok_r(temp_segment, ".", &saveptr2);
 
-                    char *sub_segment = strtok_r(temp_segment, ".", &saveptr2);
+                        while (sub_segment != NULL) {
+                            
+                            if (file_segment != NULL) break;
 
-                    while (sub_segment != NULL) {
-                        
-                        if (file_segment != NULL) break;
-
-                        if (strcmp(sub_segment, curr_segment) == 0) {
-                            strcpy(file_name, sub_segment);
-                            strcat(file_name, ".");
-                            break;                        
-                        } else {
-                            if (strcmp(sub_segment, "txt") != 0 && strcmp(sub_segment, "crp") != 0) {
-                                if (!first_segment) {
-                                    strcpy(file_name, sub_segment);
-                                    first_segment = 1;
-                                } else {
-                                    strcat(file_name, sub_segment);
-                                }
+                            if (strcmp(sub_segment, curr_segment) == 0) {
+                                strcpy(file_name, sub_segment);
                                 strcat(file_name, ".");
+                                break;                        
                             } else {
-                                char *temp_extension = sub_segment;
-                                strcpy(extension, temp_extension);
-                                break;
+                                if (strcmp(sub_segment, "txt") != 0 && strcmp(sub_segment, "crp") != 0) {
+                                    if (!first_segment) {
+                                        strcpy(file_name, sub_segment);
+                                        first_segment = 1;
+                                    } else {
+                                        strcat(file_name, sub_segment);
+                                    }
+                                    strcat(file_name, ".");
+                                } else {
+                                    char *temp_extension = sub_segment;
+                                    strcpy(extension, temp_extension);
+                                    break;
+                                }
                             }
+                            sub_segment = strtok_r(NULL, ".", &saveptr2);
                         }
-                        sub_segment = strtok_r(NULL, ".", &saveptr2);
+                        free(temp_segment);
+                        free(curr_segment);
                     }
-                    free(temp_segment);
-                    free(curr_segment);
-                }
-                free(temp_arg);
-            }   
+                    free(temp_arg);
+                }   
+            }
         }
     }
 
@@ -233,8 +234,6 @@ int decrypt() {
 
     
     while (fgets(curr_line, sizeof(curr_line), file) != NULL) {
-        char output_array[strlen(curr_line) / 2];
-
         char *stop_str;
         char sub_str[2];
         for (int i = 0; i < strlen(curr_line); i += 2) {
@@ -246,7 +245,6 @@ int decrypt() {
                 if (fputc('\t', file_out) == EOF) printf("Error putting to file\n"), result = 0;
             } else if (curr_line[i] == '\n' || curr_line[i] == '\r') {
                 if (fputc(curr_line[i], file_out) == EOF) printf("Error putting to file\n"), result = 0;
-                output_array[i/2] = curr_line[i];
             } else if (curr_line[i] != '\n' && curr_line[i] != '\r' && curr_line[i + 1] != '\n' && curr_line[i + 1] != '\r') {
 
                 int ascii = strtol(sub_str, &stop_str, 16);
